@@ -674,6 +674,23 @@ while True:
     if step > 10 and total_training_time >= TIME_BUDGET:
         break
 
+    # Checkpoint saving every hour
+    checkpoint_interval = 3600  # 1 hour in seconds
+    checkpoint_path = os.path.join(os.getcwd(), "checkpoints")
+    os.makedirs(checkpoint_path, exist_ok=True)
+    last_checkpoint_time = getattr(save_checkpoint, 'last_time', 0)
+    if total_training_time - last_checkpoint_time >= checkpoint_interval:
+        checkpoint_file = os.path.join(checkpoint_path, f"checkpoint_{int(total_training_time)}.pt")
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'step': step,
+            'total_training_time': total_training_time,
+            'config': asdict(config),
+        }, checkpoint_file)
+        print(f"\nCheckpoint saved: {checkpoint_file}")
+        save_checkpoint.last_time = total_training_time
+
 print()  # newline after \r training log
 
 total_tokens = step * TOTAL_BATCH_SIZE
