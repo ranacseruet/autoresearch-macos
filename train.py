@@ -604,6 +604,7 @@ t_start_training = time.time()
 smooth_train_loss = 0
 total_training_time = 0
 step = 0
+_last_checkpoint_time = 0.0  # Track last checkpoint save time
 
 def sync_device(device_type):
     if device_type == "cuda":
@@ -676,11 +677,10 @@ while True:
 
     # Checkpoint saving every hour
     checkpoint_interval = 3600  # 1 hour in seconds
-    checkpoint_path = os.path.join(os.getcwd(), "checkpoints")
-    os.makedirs(checkpoint_path, exist_ok=True)
-    last_checkpoint_time = getattr(save_checkpoint, 'last_time', 0)
-    if total_training_time - last_checkpoint_time >= checkpoint_interval:
-        checkpoint_file = os.path.join(checkpoint_path, f"checkpoint_{int(total_training_time)}.pt")
+    checkpoint_dir = os.path.join(os.getcwd(), "checkpoints")
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    if total_training_time - _last_checkpoint_time >= checkpoint_interval:
+        checkpoint_file = os.path.join(checkpoint_dir, f"checkpoint_{int(total_training_time)}.pt")
         torch.save({
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
@@ -689,7 +689,7 @@ while True:
             'config': asdict(config),
         }, checkpoint_file)
         print(f"\nCheckpoint saved: {checkpoint_file}")
-        save_checkpoint.last_time = total_training_time
+        _last_checkpoint_time = total_training_time
 
 print()  # newline after \r training log
 
