@@ -700,6 +700,20 @@ model.eval()
 with autocast_ctx:
     val_bpb = evaluate_bpb(model, tokenizer, DEVICE_BATCH_SIZE)
 
+# Save final checkpoint for testing
+checkpoint_path = os.path.join(os.getcwd(), "checkpoints")
+os.makedirs(checkpoint_path, exist_ok=True)
+final_checkpoint = os.path.join(checkpoint_path, "latest.pt")
+torch.save({
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'step': step,
+    'total_training_time': total_training_time,
+    'config': asdict(config),
+    'val_bpb': val_bpb,
+}, final_checkpoint)
+print(f"Final checkpoint saved: {final_checkpoint}")
+
 # Final summary
 t_end = time.time()
 startup_time = t_start_training - t_start
