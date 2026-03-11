@@ -605,6 +605,25 @@ smooth_train_loss = 0
 total_training_time = 0
 step = 0
 _last_checkpoint_time = 0.0  # Track last checkpoint save time
+checkpoint_dir = os.path.join(os.getcwd(), "checkpoints")
+
+
+def save_checkpoint(model, optimizer, step, total_training_time, config, filename, val_bpb=None):
+    """Save model checkpoint to disk."""
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    checkpoint_path = os.path.join(checkpoint_dir, filename)
+    data = {
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'step': step,
+        'total_training_time': total_training_time,
+        'config': asdict(config),
+    }
+    if val_bpb is not None:
+        data['val_bpb'] = val_bpb
+    torch.save(data, checkpoint_path)
+    return checkpoint_path
+
 
 def sync_device(device_type):
     if device_type == "cuda":
@@ -677,18 +696,12 @@ while True:
 
     # Checkpoint saving every hour
     checkpoint_interval = 3600  # 1 hour in seconds
-    checkpoint_dir = os.path.join(os.getcwd(), "checkpoints")
-    os.makedirs(checkpoint_dir, exist_ok=True)
     if total_training_time - _last_checkpoint_time >= checkpoint_interval:
-        checkpoint_file = os.path.join(checkpoint_dir, f"checkpoint_{int(total_training_time)}.pt")
-        torch.save({
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'step': step,
-            'total_training_time': total_training_time,
-            'config': asdict(config),
-        }, checkpoint_file)
-        print(f"\nCheckpoint saved: {checkpoint_file}")
+        checkpoint_file = save_checkpoint(
+            model, optimizer, step, total_training_time, config,
+            f"checkpoint_{int(total_training_time)}.pt"
+        )
+        print(f"\nHourly checkpoint saved: {checkpoint_file}")
         _last_checkpoint_time = total_training_time
 
 print()  # newline after \r training log
@@ -701,17 +714,10 @@ with autocast_ctx:
     val_bpb = evaluate_bpb(model, tokenizer, DEVICE_BATCH_SIZE)
 
 # Save final checkpoint for testing
-checkpoint_path = os.path.join(os.getcwd(), "checkpoints")
-os.makedirs(checkpoint_path, exist_ok=True)
-final_checkpoint = os.path.join(checkpoint_path, "latest.pt")
-torch.save({
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'step': step,
-    'total_training_time': total_training_time,
-    'config': asdict(config),
-    'val_bpb': val_bpb,
-}, final_checkpoint)
+final_checkpoint = save_checkpoint(
+    model, optimizer, step, total_training_time, config,
+    "latest.pt", val_bpb=val_bpb
+)
 print(f"Final checkpoint saved: {final_checkpoint}")
 
 # Final summary
