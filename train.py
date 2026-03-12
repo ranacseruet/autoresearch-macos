@@ -494,7 +494,7 @@ WEIGHT_DECAY = 0.10      # cautious weight decay for Muon
 ADAM_BETAS = (0.85, 0.97) # Adam beta1, beta2
 WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
 WARMDOWN_RATIO = 0.3    # fraction of time budget for LR warmdown
-FINAL_LR_FRAC = 0.12     # final LR as fraction of initial
+FINAL_LR_FRAC = 0.11     # final LR as fraction of initial
 
 # Model size
 DEPTH = 4               # number of transformer layers
@@ -591,7 +591,7 @@ def get_lr_multiplier(progress):
 
 def get_muon_momentum(step):
     frac = min(step / 200, 1)
-    return (1 - frac) * 0.75 + frac * 0.86
+    return (1 - frac) * 0.75 + frac * 0.85
 
 def get_weight_decay(progress):
     return WEIGHT_DECAY * (1 - progress)
