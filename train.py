@@ -493,7 +493,7 @@ SCALAR_LR = 1.0         # learning rate for per-layer scalars (Adam)
 WEIGHT_DECAY = 0.2      # cautious weight decay for Muon
 ADAM_BETAS = (0.8, 0.95) # Adam beta1, beta2
 WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
-WARMDOWN_RATIO = 0.3    # fraction of time budget for LR warmdown
+WARMDOWN_RATIO = 0.2    # fraction of time budget for LR warmdown
 FINAL_LR_FRAC = 0.15     # final LR as fraction of initial
 
 # Model size
@@ -591,7 +591,7 @@ def get_lr_multiplier(progress):
 
 def get_muon_momentum(step):
     frac = min(step / 200, 1)
-    return (1 - frac) * 0.87 + frac * 0.87
+    return (1 - frac) * 0.80 + frac * 0.85
 
 def get_weight_decay(progress):
     return WEIGHT_DECAY * (1 - progress)
