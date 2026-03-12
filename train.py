@@ -494,7 +494,7 @@ WEIGHT_DECAY = 0.13      # cautious weight decay for Muon
 ADAM_BETAS = (0.85, 0.97) # Adam beta1, beta2
 WARMUP_RATIO = 0.0      # fraction of time budget for LR warmup
 WARMDOWN_RATIO = 0.3    # fraction of time budget for LR warmdown
-FINAL_LR_FRAC = 0.12     # final LR as fraction of initial
+FINAL_LR_FRAC = 0.08     # final LR as fraction of initial
 
 # Model size
 DEPTH = 4               # number of transformer layers
