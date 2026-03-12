@@ -17,8 +17,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.checkpoint import save_checkpoint
-
 def verify_macos_env():
     if sys.platform != "darwin":
         raise RuntimeError(f"This script requires macOS with Metal. Detected platform: {sys.platform}")
@@ -482,7 +480,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # ---------------------------------------------------------------------------
 
 # Model architecture
-ASPECT_RATIO = 64       # model_dim = depth * ASPECT_RATIO
+ASPECT_RATIO = 96       # model_dim = depth * ASPECT_RATIO
 HEAD_DIM = 128          # target head dimension for attention
 WINDOW_PATTERN = "L"    # sliding window pattern: L=full, S=half context
 
@@ -499,7 +497,7 @@ WARMDOWN_RATIO = 0.3    # fraction of time budget for LR warmdown
 FINAL_LR_FRAC = 0.15     # final LR as fraction of initial
 
 # Model size
-DEPTH = 5               # number of transformer layers
+DEPTH = 4               # number of transformer layers
 DEVICE_BATCH_SIZE = 8  # per-device batch size (reduce if OOM)
 
 # ---------------------------------------------------------------------------
@@ -606,9 +604,6 @@ t_start_training = time.time()
 smooth_train_loss = 0
 total_training_time = 0
 step = 0
-_last_checkpoint_time = 0.0  # Track last checkpoint save time
-checkpoint_dir = os.path.join(os.getcwd(), "checkpoints")
-
 
 def sync_device(device_type):
     if device_type == "cuda":
@@ -679,16 +674,6 @@ while True:
     if step > 10 and total_training_time >= TIME_BUDGET:
         break
 
-    # Checkpoint saving every hour
-    checkpoint_interval = 3600  # 1 hour in seconds
-    if total_training_time - _last_checkpoint_time >= checkpoint_interval:
-        checkpoint_file = save_checkpoint(
-            model, optimizer, step, total_training_time, asdict(config), checkpoint_dir,
-            f"checkpoint_{int(total_training_time)}.pt"
-        )
-        print(f"\nHourly checkpoint saved: {checkpoint_file}")
-        _last_checkpoint_time = total_training_time
-
 print()  # newline after \r training log
 
 total_tokens = step * TOTAL_BATCH_SIZE
@@ -697,13 +682,6 @@ total_tokens = step * TOTAL_BATCH_SIZE
 model.eval()
 with autocast_ctx:
     val_bpb = evaluate_bpb(model, tokenizer, DEVICE_BATCH_SIZE)
-
-# Save final checkpoint for testing
-final_checkpoint = save_checkpoint(
-    model, optimizer, step, total_training_time, asdict(config), checkpoint_dir,
-    "latest.pt", val_bpb=val_bpb
-)
-print(f"Final checkpoint saved: {final_checkpoint}")
 
 # Final summary
 t_end = time.time()
