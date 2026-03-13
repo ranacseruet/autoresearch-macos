@@ -482,7 +482,7 @@ class MuonAdamW(torch.optim.Optimizer):
 # Model architecture
 ASPECT_RATIO = 64       # model_dim = depth * ASPECT_RATIO
 HEAD_DIM = 256          # target head dimension for attention
-WINDOW_PATTERN = "L"    # sliding window pattern: L=full, S=half context
+WINDOW_PATTERN = "S"    # sliding window pattern: L=full, S=half context
 
 # Optimization
 TOTAL_BATCH_SIZE = 2**14 # ~16K tokens per optimizer step
